@@ -13,7 +13,11 @@ export default function App() {
     startBackendConnection();
     const unsub = eventBus.subscribe('exchange:tick', (data) => {
       const tick = data as PriceTick;
-      setLastUpdate(tick.timestamp);
+      setLastUpdate((prev) => {
+        const prevSec = prev ? Math.floor(prev / 1000) : 0;
+        const newSec = Math.floor(tick.timestamp / 1000);
+        return newSec !== prevSec ? tick.timestamp : prev;
+      });
     });
     return () => {
       stopBackendConnection();
