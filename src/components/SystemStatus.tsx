@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { SystemComponent } from '../types';
-
-const API_BASE =
-  (import.meta.env.VITE_API_URL as string | undefined) ?? '';
+import { getSystemStatus } from '../services/api';
 
 interface StatusResponse {
   tickCounts: Record<string, number>;
@@ -22,14 +20,13 @@ export default function SystemStatus() {
     async function poll() {
       while (active) {
         try {
-          const res = await fetch(`${API_BASE}/api/status`);
-          const data = (await res.json()) as StatusResponse;
+          const data = (await getSystemStatus()) as StatusResponse;
           if (!active) break;
           setTotalTicks(data.totalTicks);
           setAggCount(data.aggCount);
           setComponents(data.components);
         } catch {
-          // backend unavailable – will retry
+          // will retry
         }
         await new Promise((r) => setTimeout(r, 2000));
       }

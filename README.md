@@ -2,6 +2,16 @@
 
 A real-time energy trading dashboard with a **Python (FastAPI) backend** and a **React + TypeScript + Vite** frontend. The backend simulates an AWS-style event-driven architecture using in-process Python services; the frontend connects via WebSocket and REST.
 
+When deployed to **GitHub Pages** (static hosting), the frontend automatically falls back to an in-browser simulator so the dashboard remains fully interactive without the backend.
+
+## Live Demo
+
+Once GitHub Pages is enabled, the site is available at:
+
+```
+https://YOUR_GITHUB_USERNAME.github.io/energymarket/
+```
+
 ## Features
 
 - **Mock Exchange Feeds** — EEX, ICE, and Nasdaq emit realistic price ticks every 1–3 seconds (Python `asyncio` tasks)
@@ -72,7 +82,7 @@ npm install
 npm run dev
 ```
 
-Open **http://localhost:5173/energy-market-demo/** in your browser. The Vite dev server proxies `/api` and `/ws` requests to the Python backend.
+Open **http://localhost:5173/energymarket/** in your browser. The Vite dev server proxies `/api` and `/ws` requests to the Python backend.
 
 ### Build Frontend for Production
 
@@ -89,30 +99,31 @@ VITE_API_URL=https://your-backend.example.com VITE_WS_URL=wss://your-backend.exa
 
 ## Deploying to GitHub Pages (Frontend)
 
-The GitHub Actions workflow deploys the **frontend** to GitHub Pages. The Python backend must be hosted separately (e.g., on a VPS, Railway, Render, or any cloud provider).
+The included GitHub Actions workflow automatically builds and deploys the **frontend** to GitHub Pages on every push to `main`. The site works fully standalone — if the Python backend is not reachable, the dashboard uses an in-browser price simulator.
 
-### Steps
+### Steps to enable
 
 1. **Push your code** to the `main` branch of your GitHub repository.
 
 2. **Enable GitHub Pages** in your repository settings:
    - Go to **Settings → Pages**
-   - Under **Source**, select **GitHub Actions**
+   - Under **Build and deployment → Source**, select **GitHub Actions**
 
 3. **Verify the workflow** runs:
-   - Go to **Actions** tab
+   - Go to the **Actions** tab
    - The "Deploy to GitHub Pages" workflow should run automatically on push to `main`
 
-4. **Access your frontend** at:
+4. **Access your site** at:
    ```
-   https://YOUR_GITHUB_USERNAME.github.io/energy-market-demo/
+   https://YOUR_GITHUB_USERNAME.github.io/energymarket/
    ```
 
-### Configuration Details
+### How it works
 
-- **Vite base path** is set to `/energy-market-demo/` in `vite.config.ts` to ensure all asset paths resolve correctly on the GitHub Pages subpath.
-- The **GitHub Actions workflow** (`.github/workflows/deploy.yml`) builds the frontend and deploys it using the official `actions/deploy-pages` action.
-- Set `VITE_API_URL` / `VITE_WS_URL` as repository secrets or workflow env vars to configure the backend URL at build time.
+- **Vite base path** is set to `/energymarket/` in `vite.config.ts` to match the repository name.
+- The **GitHub Actions workflow** (`.github/workflows/deploy.yml`) installs dependencies, builds the frontend, and deploys it using `actions/deploy-pages@v4`.
+- On GitHub Pages, the frontend detects that the Python backend is unreachable and seamlessly switches to an **in-browser simulator** that generates realistic price data.
+- If you have a deployed backend, set `VITE_API_URL` / `VITE_WS_URL` as repository secrets or workflow env vars to connect to it at build time.
 
 ### Customizing the Repository Name
 

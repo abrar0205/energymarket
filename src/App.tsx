@@ -20,8 +20,8 @@ export default function App() {
       <header className="app-header">
         <h1>⚡ Energy Market Demo</h1>
         <p className="subtitle">
-          Real-time energy trading dashboard — Python backend with simulated
-          exchange feeds, aggregation &amp; analytics
+          Real-time energy trading dashboard — simulated exchange feeds,
+          aggregation &amp; analytics
         </p>
       </header>
       <main className="dashboard">

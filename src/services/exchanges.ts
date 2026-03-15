@@ -2,11 +2,13 @@
  * WebSocket client – connects to the Python backend and bridges
  * incoming messages to the frontend event bus.
  *
- * The Python backend runs the actual exchange feeds, aggregation,
- * cache and historical store.  This module simply receives the data.
+ * If the backend is unreachable (e.g. on GitHub Pages), it automatically
+ * falls back to an in-browser price simulator so the dashboard remains
+ * fully interactive as a standalone demo.
  */
 
 import { eventBus } from './eventBus';
+import { startSimulator, stopSimulator } from './simulator';
 import type { PriceTick, NormalizedPrice } from '../types';
 
 const WS_URL =
@@ -15,10 +17,15 @@ const WS_URL =
     ? `ws://${window.location.hostname}:8000/ws`
     : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`);
 
+const MAX_RETRIES = 3; // fall back to simulator after this many failures
+
 let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let retryCount = 0;
+let usingSimulator = false;
 
 function connect(): void {
+  if (usingSimulator) return;
   if (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING) {
     return;
   }
@@ -27,6 +34,7 @@ function connect(): void {
 
   socket.onopen = () => {
     console.info('[WS] connected to backend');
+    retryCount = 0;
     eventBus.publish('ws:status', 'connected');
   };
 
@@ -49,7 +57,13 @@ function connect(): void {
   };
 
   socket.onclose = () => {
-    console.warn('[WS] disconnected – reconnecting in 2 s');
+    retryCount++;
+    if (retryCount >= MAX_RETRIES) {
+      console.info(`[WS] backend unreachable after ${MAX_RETRIES} attempts – switching to demo mode`);
+      activateSimulator();
+      return;
+    }
+    console.warn(`[WS] disconnected – reconnecting (attempt ${retryCount}/${MAX_RETRIES})`);
     eventBus.publish('ws:status', 'disconnected');
     scheduleReconnect();
   };
@@ -60,14 +74,21 @@ function connect(): void {
 }
 
 function scheduleReconnect(): void {
-  if (reconnectTimer) return;
+  if (reconnectTimer || usingSimulator) return;
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
     connect();
   }, 2000);
 }
 
+function activateSimulator(): void {
+  usingSimulator = true;
+  startSimulator();
+}
+
 export function startBackendConnection(): void {
+  retryCount = 0;
+  usingSimulator = false;
   connect();
 }
 
@@ -80,5 +101,9 @@ export function stopBackendConnection(): void {
     socket.onclose = null; // prevent reconnect on intentional close
     socket.close();
     socket = null;
+  }
+  if (usingSimulator) {
+    stopSimulator();
+    usingSimulator = false;
   }
 }
