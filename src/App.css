@@ -1,6 +1,6 @@
 :root {
   --primary: #1D4276;
-  --primaryHover: #16345C;
+  --primary-hover: #16345C;
   --accent: #2A78FF;
   --bg: #F5F7FA;
   --surface: #FFFFFF;
@@ -231,7 +231,7 @@ a {
 }
 
 a:hover {
-  color: var(--primaryHover);
+  color: var(--primary-hover);
 }
 
 /* Buttons */
@@ -254,7 +254,7 @@ a:hover {
 }
 
 .btn-primary:hover {
-  background: var(--primaryHover);
+  background: var(--primary-hover);
 }
 
 .btn-outline {
