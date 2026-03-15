@@ -10,72 +10,71 @@ import { eventBus } from './eventBus';
 import type { PriceTick, NormalizedPrice, ExchangeName } from '../types';
 
 const EXCHANGES: ExchangeName[] = ['EEX', 'ICE', 'Nasdaq'];
-const CONTRACTS = ['Base-2026-Q1', 'Peak-2026-Q2', 'Base-2026-Cal'];
-const BASE_PRICES: Record<string, number> = {
-  'Base-2026-Q1': 72.5,
-  'Peak-2026-Q2': 89.0,
-  'Base-2026-Cal': 68.0,
+const CONTRACT = 'Power Germany Base Year 2021';
+const BASE_PRICE = 72.50;
+
+// Track current prices per exchange for small random walks
+const currentPrices: Record<ExchangeName, number> = {
+  EEX: BASE_PRICE,
+  ICE: BASE_PRICE + 0.15,
+  Nasdaq: BASE_PRICE - 0.10,
 };
 
-/** Small random walk around a base price. */
-function jitter(base: number, spread = 2): number {
-  return +(base + (Math.random() - 0.5) * spread).toFixed(2);
+/** Small random walk: ±0.03 to ±0.10 */
+function smallDelta(): number {
+  const sign = Math.random() < 0.5 ? -1 : 1;
+  return sign * (0.03 + Math.random() * 0.07);
 }
 
 // Track latest per-exchange prices for aggregation
-const latestPrices: Record<string, Record<ExchangeName, number>> = {};
+const latestPrices: Record<ExchangeName, number> = { ...currentPrices };
 
 let timers: ReturnType<typeof setTimeout>[] = [];
 let running = false;
 
 function emitTick(): void {
   const exchange = EXCHANGES[Math.floor(Math.random() * EXCHANGES.length)];
-  const contract = CONTRACTS[Math.floor(Math.random() * CONTRACTS.length)];
-  const price = jitter(BASE_PRICES[contract]);
+  const delta = smallDelta();
+  currentPrices[exchange] = +(currentPrices[exchange] + delta).toFixed(2);
+  const price = currentPrices[exchange];
   const volume = Math.floor(Math.random() * 500) + 50;
 
   const tick: PriceTick = {
     exchange,
-    contract,
+    contract: CONTRACT,
     price,
     volume,
     timestamp: Date.now(),
   };
 
   // Update tracking
-  if (!latestPrices[contract]) {
-    latestPrices[contract] = {} as Record<ExchangeName, number>;
-  }
-  latestPrices[contract][exchange] = price;
+  latestPrices[exchange] = price;
 
   // Publish tick
   eventBus.publish('exchange:tick', tick);
   eventBus.publish(`exchange:${exchange}`, tick);
 
   // Build aggregated price
-  const ep = latestPrices[contract];
-  const prices = Object.values(ep);
-  if (prices.length === 0) return;
-
+  const prices = Object.values(latestPrices);
   const avg = +(prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2);
   const lowestPrice = Math.min(...prices);
   const highestPrice = Math.max(...prices);
 
   const normalized: NormalizedPrice = {
-    contract,
+    contract: CONTRACT,
     averagePrice: avg,
     bestBid: lowestPrice,
     bestAsk: highestPrice,
     latestPrice: price,
     latestExchange: exchange,
     timestamp: Date.now(),
-    exchangePrices: { ...ep } as Record<ExchangeName, number>,
+    exchangePrices: { ...latestPrices },
   };
 
   eventBus.publish('aggregated:price', normalized);
 
-  // Store for historical API fallback
-  addHistoryPoint({ timestamp: Date.now(), price: avg, contract });
+  // Store for historical API fallback – one point per exchange
+  addHistoryPoint({ timestamp: Date.now(), price, contract: exchange });
 }
 
 // ----- In-memory historical store (for chart) -----
