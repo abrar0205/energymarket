@@ -69,15 +69,16 @@ export default function PriceChart() {
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
-            <XAxis dataKey="time" stroke="var(--chart-axis)" fontSize={11} />
-            <YAxis domain={['auto', 'auto']} stroke="var(--chart-axis)" fontSize={11} />
+            <XAxis dataKey="time" stroke="var(--chart-axis)" fontSize={12} tickLine={false} />
+            <YAxis domain={['auto', 'auto']} stroke="var(--chart-axis)" fontSize={12} tickLine={false} />
             <Tooltip
               contentStyle={{
                 background: 'var(--chart-tooltip-bg)',
                 border: '1px solid var(--chart-tooltip-border)',
-                borderRadius: 6,
+                borderRadius: 10,
                 color: 'var(--text)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                boxShadow: '0 6px 20px rgba(11,18,32,0.08)',
+                fontSize: 13,
               }}
             />
             <Legend />
