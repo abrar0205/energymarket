@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ExchangeFeed from './components/ExchangeFeed';
 import PriceChart from './components/PriceChart';
+import HistoricalChart from './components/HistoricalChart';
 import { startBackendConnection, stopBackendConnection } from './services/exchanges';
 import { eventBus } from './services/eventBus';
 import type { PriceTick } from './types';
@@ -37,7 +38,7 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1>RWE Energy Trader Dashboard</h1>
+          <h1>RWE Supply &amp; Trading - Trader Dashboard</h1>
           <p className="subtitle">
             Power Germany Base Year 2021 — Simulated Live Market View
           </p>
@@ -55,8 +56,11 @@ export default function App() {
         <ExchangeFeed />
         <PriceChart />
       </main>
+      <section className="historical-section">
+        <HistoricalChart />
+      </section>
       <footer className="app-footer">
-        <p>RWE Energy Trading · Simulated Market Data</p>
+        <p>RWE Supply and trading - Simulated Market view</p>
       </footer>
     </div>
   );

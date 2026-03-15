@@ -368,3 +368,15 @@ a:hover {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* Historical Section */
+.historical-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem 2rem;
+  width: 100%;
+}
+
+.historical-panel {
+  width: 100%;
+}
