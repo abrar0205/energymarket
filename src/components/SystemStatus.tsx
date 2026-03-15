@@ -1,94 +1,43 @@
 import { useEffect, useState } from 'react';
-import { eventBus } from '../services/eventBus';
-import type { SystemComponent, PriceTick } from '../types';
+import type { SystemComponent } from '../types';
 
-const INITIAL_COMPONENTS: SystemComponent[] = [
-  {
-    name: 'EEX Exchange Feed',
-    status: 'offline',
-    description: 'Simulated EEX power exchange',
-    awsEquivalent: 'External API → EventBridge',
-  },
-  {
-    name: 'ICE Exchange Feed',
-    status: 'offline',
-    description: 'Simulated ICE futures exchange',
-    awsEquivalent: 'External API → EventBridge',
-  },
-  {
-    name: 'Nasdaq Exchange Feed',
-    status: 'offline',
-    description: 'Simulated Nasdaq commodities',
-    awsEquivalent: 'External API → EventBridge',
-  },
-  {
-    name: 'Event Bus',
-    status: 'healthy',
-    description: 'Internal pub/sub message broker',
-    awsEquivalent: 'Amazon EventBridge',
-  },
-  {
-    name: 'Aggregation Service',
-    status: 'healthy',
-    description: 'Price normalization & computation',
-    awsEquivalent: 'AWS Lambda',
-  },
-  {
-    name: 'Recent Cache',
-    status: 'healthy',
-    description: 'In-memory + localStorage cache',
-    awsEquivalent: 'Amazon ElastiCache (Redis)',
-  },
-  {
-    name: 'Historical Store',
-    status: 'healthy',
-    description: 'Rolling price history',
-    awsEquivalent: 'Amazon S3',
-  },
-  {
-    name: 'API Layer',
-    status: 'healthy',
-    description: 'Frontend service functions',
-    awsEquivalent: 'API Gateway + WebSocket',
-  },
-];
+const API_BASE =
+  (import.meta.env.VITE_API_URL as string | undefined) ?? '';
+
+interface StatusResponse {
+  tickCounts: Record<string, number>;
+  totalTicks: number;
+  aggCount: number;
+  components: SystemComponent[];
+}
 
 export default function SystemStatus() {
-  const [components, setComponents] = useState<SystemComponent[]>(INITIAL_COMPONENTS);
-  const [tickCounts, setTickCounts] = useState<Record<string, number>>({
-    EEX: 0,
-    ICE: 0,
-    Nasdaq: 0,
-  });
+  const [totalTicks, setTotalTicks] = useState(0);
   const [aggCount, setAggCount] = useState(0);
+  const [components, setComponents] = useState<SystemComponent[]>([]);
 
   useEffect(() => {
-    const unsub1 = eventBus.subscribe('exchange:tick', (data) => {
-      const tick = data as PriceTick;
-      setTickCounts((prev) => ({
-        ...prev,
-        [tick.exchange]: (prev[tick.exchange] || 0) + 1,
-      }));
-      setComponents((prev) =>
-        prev.map((c) =>
-          c.name === `${tick.exchange} Exchange Feed`
-            ? { ...c, status: 'healthy' as const, lastUpdate: Date.now() }
-            : c
-        )
-      );
-    });
+    let active = true;
 
-    const unsub2 = eventBus.subscribe('aggregated:price', () => {
-      setAggCount((c) => c + 1);
-    });
+    async function poll() {
+      while (active) {
+        try {
+          const res = await fetch(`${API_BASE}/api/status`);
+          const data = (await res.json()) as StatusResponse;
+          if (!active) break;
+          setTotalTicks(data.totalTicks);
+          setAggCount(data.aggCount);
+          setComponents(data.components);
+        } catch {
+          // backend unavailable – will retry
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+    }
 
-    return () => {
-      unsub1();
-      unsub2();
-    };
+    poll();
+    return () => { active = false; };
   }, []);
-
-  const totalTicks = Object.values(tickCounts).reduce((a, b) => a + b, 0);
 
   return (
     <div className="panel">

@@ -1,55 +1,95 @@
 # ⚡ Energy Market Demo
 
-A real-time energy trading dashboard built with **React + TypeScript + Vite**. This fully static app simulates an AWS-style architecture using frontend-only components — no backend required.
-
-## Live Demo
-
-**https://YOUR_GITHUB_USERNAME.github.io/energy-market-demo/**
+A real-time energy trading dashboard with a **Python (FastAPI) backend** and a **React + TypeScript + Vite** frontend. The backend simulates an AWS-style event-driven architecture using in-process Python services; the frontend connects via WebSocket and REST.
 
 ## Features
 
-- **Mock Exchange Feeds** — EEX, ICE, and Nasdaq emit realistic price ticks every 1–3 seconds
-- **Event Bus** — Custom pub/sub system simulating Amazon EventBridge
-- **Aggregation Service** — Normalizes contracts and computes average / best / latest prices (simulates AWS Lambda)
-- **Recent Cache** — In-memory store with localStorage persistence (simulates Amazon ElastiCache / Redis)
-- **Historical Storage** — Rolling price history persisted to localStorage (simulates Amazon S3)
-- **API Simulation** — `getHistoricalPrices()` and `subscribeToRealtimePrices()` frontend service functions (simulates API Gateway + WebSocket)
-- **Dashboard** — Live ticker cards, exchange-wise feeds, aggregated market table, price history chart, and system status panel
+- **Mock Exchange Feeds** — EEX, ICE, and Nasdaq emit realistic price ticks every 1–3 seconds (Python `asyncio` tasks)
+- **Event Bus** — Async pub/sub system simulating Amazon EventBridge (Python)
+- **Aggregation Service** — Normalizes contracts and computes average / best / latest prices (Python, simulates AWS Lambda)
+- **Recent Cache** — In-memory Python cache (simulates Amazon ElastiCache / Redis)
+- **Historical Storage** — Rolling price history kept in memory (Python, simulates Amazon S3)
+- **API Layer** — FastAPI REST endpoints + WebSocket stream (simulates API Gateway)
+- **Dashboard** — Live ticker cards, exchange-wise feeds, aggregated market table, price history chart, and system status panel (React)
 
 ## Architecture
 
-| Frontend Module | AWS Equivalent |
+```
+┌─────────────────────────────────────────────────────┐
+│  Python Backend (FastAPI)                           │
+│                                                     │
+│  Exchange Feeds ──► Event Bus ──► Aggregator        │
+│       (asyncio)      (pub/sub)     (Lambda)         │
+│                         │                           │
+│                    ┌────┴────┐                      │
+│                    ▼         ▼                      │
+│               Cache      Historical Store           │
+│              (Redis)        (S3)                     │
+│                    │         │                      │
+│                    └────┬────┘                      │
+│                         ▼                           │
+│              REST API + WebSocket                   │
+│              (API Gateway)                          │
+└─────────────────┬───────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────┐
+│  React Frontend (Vite)                              │
+│  Ticker · Chart · Table · Feeds · Status            │
+└─────────────────────────────────────────────────────┘
+```
+
+| Python Module | AWS Equivalent |
 |---|---|
-| Mock exchange feeds | External APIs → EventBridge |
-| Custom event bus | Amazon EventBridge |
-| Aggregation service | AWS Lambda |
-| In-memory + localStorage cache | Amazon ElastiCache (Redis) |
-| localStorage history store | Amazon S3 |
-| Service functions (API layer) | API Gateway + WebSocket/HTTP |
+| `backend/services/exchanges.py` | External APIs → EventBridge |
+| `backend/services/event_bus.py` | Amazon EventBridge |
+| `backend/services/aggregator.py` | AWS Lambda |
+| `backend/services/cache.py` | Amazon ElastiCache (Redis) |
+| `backend/services/historical_store.py` | Amazon S3 |
+| `backend/main.py` (REST + WS) | API Gateway + WebSocket |
 
 ## Getting Started
 
 ### Prerequisites
 
+- [Python](https://www.python.org/) 3.10+ and pip
 - [Node.js](https://nodejs.org/) 18+ and npm
 
-### Local Development
+### 1. Start the Python Backend
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+The backend runs at **http://localhost:8000**. API docs are available at http://localhost:8000/docs.
+
+### 2. Start the React Frontend
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:5173/energy-market-demo/ in your browser.
+Open **http://localhost:5173/energy-market-demo/** in your browser. The Vite dev server proxies `/api` and `/ws` requests to the Python backend.
 
-### Build for Production
+### Build Frontend for Production
 
 ```bash
 npm run build
 npm run preview
 ```
 
-## Deploying to GitHub Pages
+Set the `VITE_API_URL` and `VITE_WS_URL` environment variables to point the frontend at your deployed backend:
+
+```bash
+VITE_API_URL=https://your-backend.example.com VITE_WS_URL=wss://your-backend.example.com/ws npm run build
+```
+
+## Deploying to GitHub Pages (Frontend)
+
+The GitHub Actions workflow deploys the **frontend** to GitHub Pages. The Python backend must be hosted separately (e.g., on a VPS, Railway, Render, or any cloud provider).
 
 ### Steps
 
@@ -63,7 +103,7 @@ npm run preview
    - Go to **Actions** tab
    - The "Deploy to GitHub Pages" workflow should run automatically on push to `main`
 
-4. **Access your site** at:
+4. **Access your frontend** at:
    ```
    https://YOUR_GITHUB_USERNAME.github.io/energy-market-demo/
    ```
@@ -71,8 +111,8 @@ npm run preview
 ### Configuration Details
 
 - **Vite base path** is set to `/energy-market-demo/` in `vite.config.ts` to ensure all asset paths resolve correctly on the GitHub Pages subpath.
-- The **GitHub Actions workflow** (`.github/workflows/deploy.yml`) builds the app and deploys it using the official `actions/deploy-pages` action.
-- The app is **fully static** — no server or backend is required.
+- The **GitHub Actions workflow** (`.github/workflows/deploy.yml`) builds the frontend and deploys it using the official `actions/deploy-pages` action.
+- Set `VITE_API_URL` / `VITE_WS_URL` as repository secrets or workflow env vars to configure the backend URL at build time.
 
 ### Customizing the Repository Name
 
@@ -91,8 +131,26 @@ Also update the favicon path in `index.html`:
 <link rel="icon" type="image/svg+xml" href="/your-repo-name/favicon.svg" />
 ```
 
+## Deploying the Python Backend
+
+The Python backend can be deployed to any platform that supports Python/ASGI:
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+Popular options: **Railway**, **Render**, **Fly.io**, **AWS EC2/ECS**, or any VPS.
+
 ## Tech Stack
 
+### Backend
+- [Python](https://www.python.org/) 3.10+
+- [FastAPI](https://fastapi.tiangolo.com/) — REST + WebSocket
+- [Uvicorn](https://www.uvicorn.org/) — ASGI server
+
+### Frontend
 - [React](https://react.dev/) 19
 - [TypeScript](https://www.typescriptlang.org/) 5.9
 - [Vite](https://vite.dev/) 8

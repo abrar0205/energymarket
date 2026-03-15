@@ -43,13 +43,15 @@ function buildChartData(history: HistoricalPoint[]): ChartRow[] {
 }
 
 export default function PriceChart() {
-  const [data, setData] = useState<ChartRow[]>(() =>
-    buildChartData(getHistoricalPrices())
-  );
+  const [data, setData] = useState<ChartRow[]>([]);
 
   useEffect(() => {
+    // Fetch initial history from the Python backend
+    getHistoricalPrices().then((h) => setData(buildChartData(h))).catch(() => {});
+
+    // Refresh chart on each new aggregated price
     const unsub = subscribeToRealtimePrices(() => {
-      setData(buildChartData(getHistoricalPrices()));
+      getHistoricalPrices().then((h) => setData(buildChartData(h))).catch(() => {});
     });
     return unsub;
   }, []);

@@ -1,84 +1,84 @@
+/**
+ * WebSocket client – connects to the Python backend and bridges
+ * incoming messages to the frontend event bus.
+ *
+ * The Python backend runs the actual exchange feeds, aggregation,
+ * cache and historical store.  This module simply receives the data.
+ */
+
 import { eventBus } from './eventBus';
-import type { PriceTick, ExchangeName } from '../types';
+import type { PriceTick, NormalizedPrice } from '../types';
 
-const CONTRACTS = ['Base-2026-Q1', 'Peak-2026-Q2', 'Base-2026-Cal'];
+const WS_URL =
+  (import.meta.env.VITE_WS_URL as string | undefined) ??
+  (import.meta.env.DEV
+    ? `ws://${window.location.hostname}:8000/ws`
+    : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`);
 
-interface ExchangeConfig {
-  name: ExchangeName;
-  basePrice: Record<string, number>;
-  volatility: number;
-  minInterval: number;
-  maxInterval: number;
-}
+let socket: WebSocket | null = null;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-const EXCHANGE_CONFIGS: ExchangeConfig[] = [
-  {
-    name: 'EEX',
-    basePrice: { 'Base-2026-Q1': 72.5, 'Peak-2026-Q2': 89.3, 'Base-2026-Cal': 68.1 },
-    volatility: 0.8,
-    minInterval: 1000,
-    maxInterval: 3000,
-  },
-  {
-    name: 'ICE',
-    basePrice: { 'Base-2026-Q1': 72.8, 'Peak-2026-Q2': 89.1, 'Base-2026-Cal': 68.4 },
-    volatility: 1.0,
-    minInterval: 1000,
-    maxInterval: 2500,
-  },
-  {
-    name: 'Nasdaq',
-    basePrice: { 'Base-2026-Q1': 72.3, 'Peak-2026-Q2': 89.5, 'Base-2026-Cal': 67.9 },
-    volatility: 0.6,
-    minInterval: 1500,
-    maxInterval: 3000,
-  },
-];
-
-const currentPrices: Record<string, Record<string, number>> = {};
-
-function generateTick(config: ExchangeConfig): PriceTick {
-  const contract = CONTRACTS[Math.floor(Math.random() * CONTRACTS.length)];
-
-  if (!currentPrices[config.name]) {
-    currentPrices[config.name] = { ...config.basePrice };
+function connect(): void {
+  if (socket?.readyState === WebSocket.OPEN || socket?.readyState === WebSocket.CONNECTING) {
+    return;
   }
 
-  const current = currentPrices[config.name][contract];
-  const change = (Math.random() - 0.5) * 2 * config.volatility;
-  const newPrice = Math.max(10, current + change);
-  currentPrices[config.name][contract] = newPrice;
+  socket = new WebSocket(WS_URL);
 
-  return {
-    exchange: config.name,
-    contract,
-    price: Math.round(newPrice * 100) / 100,
-    volume: Math.floor(Math.random() * 500) + 50,
-    timestamp: Date.now(),
+  socket.onopen = () => {
+    console.info('[WS] connected to backend');
+    eventBus.publish('ws:status', 'connected');
+  };
+
+  socket.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data as string) as {
+        type: string;
+        data: unknown;
+      };
+      if (msg.type === 'exchange_tick') {
+        const tick = msg.data as PriceTick;
+        eventBus.publish('exchange:tick', tick);
+        eventBus.publish(`exchange:${tick.exchange}`, tick);
+      } else if (msg.type === 'aggregated_price') {
+        eventBus.publish('aggregated:price', msg.data as NormalizedPrice);
+      }
+    } catch {
+      // ignore malformed messages
+    }
+  };
+
+  socket.onclose = () => {
+    console.warn('[WS] disconnected – reconnecting in 2 s');
+    eventBus.publish('ws:status', 'disconnected');
+    scheduleReconnect();
+  };
+
+  socket.onerror = () => {
+    socket?.close();
   };
 }
 
-const timers: ReturnType<typeof setTimeout>[] = [];
+function scheduleReconnect(): void {
+  if (reconnectTimer) return;
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    connect();
+  }, 2000);
+}
 
-function startExchange(config: ExchangeConfig): void {
-  function emit() {
-    const tick = generateTick(config);
-    eventBus.publish('exchange:tick', tick);
-    eventBus.publish(`exchange:${config.name}`, tick);
-    const delay =
-      config.minInterval +
-      Math.random() * (config.maxInterval - config.minInterval);
-    const timer = setTimeout(emit, delay);
-    timers.push(timer);
+export function startBackendConnection(): void {
+  connect();
+}
+
+export function stopBackendConnection(): void {
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
   }
-  emit();
-}
-
-export function startAllExchanges(): void {
-  EXCHANGE_CONFIGS.forEach(startExchange);
-}
-
-export function stopAllExchanges(): void {
-  timers.forEach(clearTimeout);
-  timers.length = 0;
+  if (socket) {
+    socket.onclose = null; // prevent reconnect on intentional close
+    socket.close();
+    socket = null;
+  }
 }

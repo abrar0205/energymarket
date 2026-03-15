@@ -4,24 +4,14 @@ import ExchangeFeed from './components/ExchangeFeed';
 import AggregatedPrice from './components/AggregatedPrice';
 import PriceChart from './components/PriceChart';
 import SystemStatus from './components/SystemStatus';
-import { startAllExchanges, stopAllExchanges } from './services/exchanges';
-import { startAggregator } from './services/aggregator';
-import { startCache } from './services/cache';
-import { startHistoricalStore } from './services/historicalStore';
+import { startBackendConnection, stopBackendConnection } from './services/exchanges';
 import './App.css';
 
 export default function App() {
   useEffect(() => {
-    startAllExchanges();
-    const stopAgg = startAggregator();
-    const stopCache = startCache();
-    const stopHistory = startHistoricalStore();
-
+    startBackendConnection();
     return () => {
-      stopAllExchanges();
-      stopAgg();
-      stopCache();
-      stopHistory();
+      stopBackendConnection();
     };
   }, []);
 
@@ -30,8 +20,8 @@ export default function App() {
       <header className="app-header">
         <h1>⚡ Energy Market Demo</h1>
         <p className="subtitle">
-          Real-time energy trading dashboard — simulated exchange feeds,
-          aggregation & analytics
+          Real-time energy trading dashboard — Python backend with simulated
+          exchange feeds, aggregation &amp; analytics
         </p>
       </header>
       <main className="dashboard">
@@ -43,8 +33,8 @@ export default function App() {
       </main>
       <footer className="app-footer">
         <p>
-          Energy Market Demo · Simulates AWS architecture (EventBridge, Lambda,
-          ElastiCache, S3, API Gateway) using frontend-only components
+          Energy Market Demo · Python FastAPI backend simulating AWS architecture
+          (EventBridge, Lambda, ElastiCache, S3, API Gateway)
         </p>
       </footer>
     </div>
