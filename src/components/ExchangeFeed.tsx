@@ -34,11 +34,6 @@ export default function ExchangeFeed() {
     return () => unsubs.forEach((u) => u());
   }, []);
 
-  function formatTime(ts: number): string {
-    const d = new Date(ts);
-    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }
-
   const activePrices = EXCHANGES
     .map((name) => ({ name, state: state[name] }))
     .filter((e): e is { name: ExchangeName; state: ExchangeState } => e.state !== null);
@@ -86,7 +81,6 @@ export default function ExchangeFeed() {
                   {name}
                   {isBest && <span className="best-badge">⭐ Best Price</span>}
                 </span>
-                <span className="exchange-time">{formatTime(s.timestamp)}</span>
               </div>
               <div className="exchange-price">€{s.price.toFixed(2)}</div>
               <span className={`exchange-delta ${deltaClass}`}>
