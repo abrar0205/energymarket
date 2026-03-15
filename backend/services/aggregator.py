@@ -1,4 +1,4 @@
-"""Aggregation service – consumes exchange ticks, normalises and computes
+"""Aggregation service – consumes exchange ticks, normalizes and computes
 average / best / latest price.  Simulates AWS Lambda aggregation."""
 
 from __future__ import annotations

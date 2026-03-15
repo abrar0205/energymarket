@@ -1,6 +1,6 @@
 """In-memory cache – simulates Amazon ElastiCache (Redis).
 
-Keeps recent ticks and the latest normalised prices."""
+Keeps recent ticks and the latest normalized prices."""
 
 from __future__ import annotations
 

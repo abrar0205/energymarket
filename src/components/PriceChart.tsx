@@ -47,11 +47,15 @@ export default function PriceChart() {
 
   useEffect(() => {
     // Fetch initial history from the Python backend
-    getHistoricalPrices().then((h) => setData(buildChartData(h))).catch(() => {});
+    getHistoricalPrices()
+      .then((h) => setData(buildChartData(h)))
+      .catch((err) => console.warn('Failed to load historical prices:', err));
 
     // Refresh chart on each new aggregated price
     const unsub = subscribeToRealtimePrices(() => {
-      getHistoricalPrices().then((h) => setData(buildChartData(h))).catch(() => {});
+      getHistoricalPrices()
+        .then((h) => setData(buildChartData(h)))
+        .catch((err) => console.warn('Failed to refresh chart data:', err));
     });
     return unsub;
   }, []);

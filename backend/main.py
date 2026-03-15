@@ -66,6 +66,28 @@ manager = ConnectionManager()
 _tick_count: dict[str, int] = {"EEX": 0, "ICE": 0, "Nasdaq": 0}
 _agg_count = 0
 
+# Component definitions for the system status panel.
+_EXCHANGE_COMPONENTS = [
+    {"name": "EEX Exchange Feed", "exchange_key": "EEX",
+     "description": "Simulated EEX power exchange", "awsEquivalent": "External API → EventBridge"},
+    {"name": "ICE Exchange Feed", "exchange_key": "ICE",
+     "description": "Simulated ICE futures exchange", "awsEquivalent": "External API → EventBridge"},
+    {"name": "Nasdaq Exchange Feed", "exchange_key": "Nasdaq",
+     "description": "Simulated Nasdaq commodities", "awsEquivalent": "External API → EventBridge"},
+]
+_STATIC_COMPONENTS = [
+    {"name": "Event Bus", "status": "healthy",
+     "description": "Internal pub/sub message broker", "awsEquivalent": "Amazon EventBridge"},
+    {"name": "Aggregation Service", "status": "healthy",
+     "description": "Price normalization & computation", "awsEquivalent": "AWS Lambda"},
+    {"name": "Recent Cache", "status": "healthy",
+     "description": "In-memory Python cache", "awsEquivalent": "Amazon ElastiCache (Redis)"},
+    {"name": "Historical Store", "status": "healthy",
+     "description": "Rolling price history", "awsEquivalent": "Amazon S3"},
+    {"name": "API Layer", "status": "healthy",
+     "description": "FastAPI REST + WebSocket", "awsEquivalent": "API Gateway + WebSocket"},
+]
+
 
 async def _forward_tick(tick: dict[str, Any]) -> None:
     global _tick_count
@@ -131,7 +153,7 @@ async def historical_prices(contract: str | None = Query(default=None)) -> list[
 
 @app.get("/api/prices")
 async def latest_prices() -> dict[str, dict[str, Any]]:
-    """Return the latest normalised prices per contract."""
+    """Return the latest normalized prices per contract."""
     return get_normalized_prices()
 
 
@@ -139,28 +161,20 @@ async def latest_prices() -> dict[str, dict[str, Any]]:
 async def system_status() -> dict[str, Any]:
     """Return the current system component statuses."""
     total_ticks = sum(_tick_count.values())
+    exchange_components = [
+        {
+            "name": c["name"],
+            "status": "healthy" if _tick_count[c["exchange_key"]] > 0 else "offline",
+            "description": c["description"],
+            "awsEquivalent": c["awsEquivalent"],
+        }
+        for c in _EXCHANGE_COMPONENTS
+    ]
     return {
         "tickCounts": dict(_tick_count),
         "totalTicks": total_ticks,
         "aggCount": _agg_count,
-        "components": [
-            {"name": "EEX Exchange Feed", "status": "healthy" if _tick_count["EEX"] > 0 else "offline",
-             "description": "Simulated EEX power exchange", "awsEquivalent": "External API → EventBridge"},
-            {"name": "ICE Exchange Feed", "status": "healthy" if _tick_count["ICE"] > 0 else "offline",
-             "description": "Simulated ICE futures exchange", "awsEquivalent": "External API → EventBridge"},
-            {"name": "Nasdaq Exchange Feed", "status": "healthy" if _tick_count["Nasdaq"] > 0 else "offline",
-             "description": "Simulated Nasdaq commodities", "awsEquivalent": "External API → EventBridge"},
-            {"name": "Event Bus", "status": "healthy",
-             "description": "Internal pub/sub message broker", "awsEquivalent": "Amazon EventBridge"},
-            {"name": "Aggregation Service", "status": "healthy",
-             "description": "Price normalization & computation", "awsEquivalent": "AWS Lambda"},
-            {"name": "Recent Cache", "status": "healthy",
-             "description": "In-memory Python cache", "awsEquivalent": "Amazon ElastiCache (Redis)"},
-            {"name": "Historical Store", "status": "healthy",
-             "description": "Rolling price history", "awsEquivalent": "Amazon S3"},
-            {"name": "API Layer", "status": "healthy",
-             "description": "FastAPI REST + WebSocket", "awsEquivalent": "API Gateway + WebSocket"},
-        ],
+        "components": exchange_components + _STATIC_COMPONENTS,
     }
 
 
