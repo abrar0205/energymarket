@@ -68,7 +68,7 @@ export default function ExchangeFeed() {
               </div>
               <div className="exchange-price">€{s.price.toFixed(2)}</div>
               <span className={`exchange-delta ${deltaClass}`}>
-                {deltaSign}{delta.toFixed(2)} €
+                {deltaSign}€{delta.toFixed(2)}
               </span>
             </div>
           );
