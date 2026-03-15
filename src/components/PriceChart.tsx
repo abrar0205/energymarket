@@ -14,9 +14,9 @@ import type { HistoricalPoint } from '../types';
 
 const EXCHANGES = ['EEX', 'ICE', 'Nasdaq'];
 const COLORS: Record<string, string> = {
-  EEX: '#4a90d9',
-  ICE: '#c97b3a',
-  Nasdaq: '#5cb87a',
+  EEX: '#1D4276',
+  ICE: '#2A78FF',
+  Nasdaq: '#12875A',
 };
 
 const MAX_POINTS = 25;
@@ -62,21 +62,22 @@ export default function PriceChart() {
 
   return (
     <div className="panel">
-      <h2>Price History — Last {MAX_POINTS} Data Points</h2>
+      <h2>Price History</h2>
       {data.length === 0 ? (
         <p className="muted">Collecting data…</p>
       ) : (
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e3356" />
-            <XAxis dataKey="time" stroke="#5a6f8a" fontSize={11} />
-            <YAxis domain={['auto', 'auto']} stroke="#5a6f8a" fontSize={11} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <XAxis dataKey="time" stroke="var(--chart-axis)" fontSize={11} />
+            <YAxis domain={['auto', 'auto']} stroke="var(--chart-axis)" fontSize={11} />
             <Tooltip
               contentStyle={{
-                background: '#111d33',
-                border: '1px solid #1e3356',
+                background: 'var(--chart-tooltip-bg)',
+                border: '1px solid var(--chart-tooltip-border)',
                 borderRadius: 6,
-                color: '#d8dee9',
+                color: 'var(--text)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
               }}
             />
             <Legend />
