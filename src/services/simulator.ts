@@ -25,7 +25,7 @@ function jitter(base: number, spread = 2): number {
 // Track latest per-exchange prices for aggregation
 const latestPrices: Record<string, Record<ExchangeName, number>> = {};
 
-let timers: ReturnType<typeof setInterval>[] = [];
+let timers: ReturnType<typeof setTimeout>[] = [];
 let running = false;
 
 function emitTick(): void {
@@ -55,15 +55,17 @@ function emitTick(): void {
   // Build aggregated price
   const ep = latestPrices[contract];
   const prices = Object.values(ep);
+  if (prices.length === 0) return;
+
   const avg = +(prices.reduce((a, b) => a + b, 0) / prices.length).toFixed(2);
-  const best = Math.min(...prices);
-  const worst = Math.max(...prices);
+  const lowestPrice = Math.min(...prices);
+  const highestPrice = Math.max(...prices);
 
   const normalized: NormalizedPrice = {
     contract,
     averagePrice: avg,
-    bestBid: best,
-    bestAsk: worst,
+    bestBid: lowestPrice,
+    bestAsk: highestPrice,
     latestPrice: price,
     latestExchange: exchange,
     timestamp: Date.now(),
