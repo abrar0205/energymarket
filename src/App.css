@@ -174,11 +174,6 @@ body {
   color: var(--muted);
 }
 
-.exchange-time {
-  font-size: 0.72rem;
-  color: var(--muted);
-}
-
 .exchange-price {
   font-size: 1.8rem;
   font-weight: 700;
