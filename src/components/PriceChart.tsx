@@ -14,7 +14,7 @@ import type { HistoricalPoint } from '../types';
 
 const EXCHANGES = ['EEX', 'ICE', 'Nasdaq'];
 const COLORS: Record<string, string> = {
-  EEX: '#1D4276',
+  EEX: '#3ed8c3',
   ICE: '#2A78FF',
   Nasdaq: '#12875A',
 };
