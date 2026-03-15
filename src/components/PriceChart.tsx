@@ -12,21 +12,23 @@ import {
 import { getHistoricalPrices, subscribeToRealtimePrices } from '../services/api';
 import type { HistoricalPoint } from '../types';
 
-const CONTRACTS = ['Base-2026-Q1', 'Peak-2026-Q2', 'Base-2026-Cal'];
+const EXCHANGES = ['EEX', 'ICE', 'Nasdaq'];
 const COLORS: Record<string, string> = {
-  'Base-2026-Q1': '#00d4ff',
-  'Peak-2026-Q2': '#ff6b6b',
-  'Base-2026-Cal': '#51cf66',
+  EEX: '#4a90d9',
+  ICE: '#c97b3a',
+  Nasdaq: '#5cb87a',
 };
+
+const MAX_POINTS = 25;
 
 interface ChartRow {
   time: string;
-  [contract: string]: string | number;
+  [exchange: string]: string | number;
 }
 
 function buildChartData(history: HistoricalPoint[]): ChartRow[] {
   const byTime = new Map<number, ChartRow>();
-  const bucket = 2000; // group into 2s buckets
+  const bucket = 2000;
 
   for (const pt of history) {
     const key = Math.floor(pt.timestamp / bucket) * bucket;
@@ -39,19 +41,17 @@ function buildChartData(history: HistoricalPoint[]): ChartRow[] {
     byTime.get(key)![pt.contract] = pt.price;
   }
 
-  return Array.from(byTime.values()).slice(-50);
+  return Array.from(byTime.values()).slice(-MAX_POINTS);
 }
 
 export default function PriceChart() {
   const [data, setData] = useState<ChartRow[]>([]);
 
   useEffect(() => {
-    // Fetch initial history from the Python backend
     getHistoricalPrices()
       .then((h) => setData(buildChartData(h)))
       .catch((err) => console.warn('Failed to load historical prices:', err));
 
-    // Refresh chart on each new aggregated price
     const unsub = subscribeToRealtimePrices(() => {
       getHistoricalPrices()
         .then((h) => setData(buildChartData(h)))
@@ -62,29 +62,30 @@ export default function PriceChart() {
 
   return (
     <div className="panel">
-      <h2>📈 Price History</h2>
+      <h2>Price History — Last {MAX_POINTS} Data Points</h2>
       {data.length === 0 ? (
         <p className="muted">Collecting data…</p>
       ) : (
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={320}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-            <XAxis dataKey="time" stroke="#888" fontSize={11} />
-            <YAxis domain={['auto', 'auto']} stroke="#888" fontSize={11} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#1e3356" />
+            <XAxis dataKey="time" stroke="#5a6f8a" fontSize={11} />
+            <YAxis domain={['auto', 'auto']} stroke="#5a6f8a" fontSize={11} />
             <Tooltip
               contentStyle={{
-                background: '#1a1a2e',
-                border: '1px solid #333',
-                borderRadius: 8,
+                background: '#111d33',
+                border: '1px solid #1e3356',
+                borderRadius: 6,
+                color: '#d8dee9',
               }}
             />
             <Legend />
-            {CONTRACTS.map((c) => (
+            {EXCHANGES.map((ex) => (
               <Line
-                key={c}
+                key={ex}
                 type="monotone"
-                dataKey={c}
-                stroke={COLORS[c]}
+                dataKey={ex}
+                stroke={COLORS[ex]}
                 strokeWidth={2}
                 dot={false}
                 connectNulls
