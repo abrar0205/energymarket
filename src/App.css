@@ -1,15 +1,21 @@
 :root {
-  --bg-primary: #0a1628;
-  --bg-panel: #111d33;
-  --bg-card: #162240;
-  --border: #1e3356;
-  --text: #d8dee9;
-  --text-muted: #7b8da6;
-  --accent: #4a90d9;
-  --green: #5cb87a;
-  --red: #d45d5d;
-  --yellow: #d4a942;
-  --orange: #c97b3a;
+  --primary: #1D4276;
+  --primary-hover: #16345C;
+  --accent: #2A78FF;
+  --bg-primary: #F5F7FA;
+  --bg-panel: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --border: #E3E8EF;
+  --text: #0B1220;
+  --text-muted: #52606D;
+  --green: #12875A;
+  --red: #C5302A;
+  --yellow: #B5880A;
+  --orange: #C97B3A;
+  --chart-grid: #E3E8EF;
+  --chart-axis: #8C98A9;
+  --chart-tooltip-bg: #FFFFFF;
+  --chart-tooltip-border: #E3E8EF;
 }
 
 * {
@@ -23,6 +29,7 @@ body {
   background: var(--bg-primary);
   color: var(--text);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
 }
 
 .app {
@@ -38,6 +45,7 @@ body {
   padding: 1.5rem 2rem;
   border-bottom: 1px solid var(--border);
   background: var(--bg-panel);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .header-content {
@@ -46,10 +54,10 @@ body {
 }
 
 .app-header h1 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: 0.01em;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: -0.01em;
 }
 
 .subtitle {
@@ -62,13 +70,13 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: rgba(92, 184, 122, 0.12);
+  background: rgba(18, 135, 90, 0.08);
   color: var(--green);
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.35rem 0.85rem;
   border-radius: 20px;
-  border: 1px solid rgba(92, 184, 122, 0.25);
+  border: 1px solid rgba(18, 135, 90, 0.18);
   white-space: nowrap;
 }
 
@@ -77,25 +85,26 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
   width: 100%;
 }
 
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .panel h2 {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
   margin-bottom: 1.25rem;
-  color: var(--text);
-  letter-spacing: 0.01em;
+  color: var(--primary);
+  letter-spacing: -0.01em;
 }
 
 .muted {
@@ -106,20 +115,29 @@ body {
 /* Exchange Cards */
 .exchange-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 @media (max-width: 768px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
   .exchange-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) {
+  .exchange-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 .exchange-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -148,7 +166,7 @@ body {
 .exchange-price {
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--primary);
 }
 
 .exchange-delta {
@@ -175,4 +193,49 @@ body {
   color: var(--text-muted);
   font-size: 0.78rem;
   border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 1px solid var(--border);
+}
+
+.btn-outline:hover {
+  background: var(--bg-primary);
 }
