@@ -6,10 +6,10 @@ When deployed to **GitHub Pages** (static hosting), the frontend automatically f
 
 ## Live Demo
 
-Once GitHub Pages is enabled, the site is available at:
+Once the deployment workflow has run, the site is available at:
 
 ```
-https://YOUR_GITHUB_USERNAME.github.io/energymarket/
+https://abrar0205.github.io/energymarket/
 ```
 
 ## Features
@@ -97,28 +97,65 @@ Set the `VITE_API_URL` and `VITE_WS_URL` environment variables to point the fron
 VITE_API_URL=https://your-backend.example.com VITE_WS_URL=wss://your-backend.example.com/ws npm run build
 ```
 
+## How to Merge a PR and Deploy
+
+Follow these steps to merge a pull request into `main` and deploy the site:
+
+### Step 1 — Open the Pull Request
+
+Go to the **Pull Requests** tab in your GitHub repository:
+
+```
+https://github.com/abrar0205/energymarket/pulls
+```
+
+Click on the PR you want to merge.
+
+### Step 2 — Mark as Ready (if Draft)
+
+If the PR shows a **"Draft"** badge, click the **"Ready for review"** button at the bottom of the PR page to mark it as ready to merge.
+
+### Step 3 — Review the Changes
+
+1. Click the **"Files changed"** tab to see what was modified.
+2. Verify the changes look correct.
+3. Optionally click **"Review changes"** → **"Approve"** to formally approve.
+
+### Step 4 — Merge to Main
+
+1. Go back to the **"Conversation"** tab of the PR.
+2. Scroll to the bottom — you'll see a green **"Merge pull request"** button.
+3. Click **"Merge pull request"**, then **"Confirm merge"**.
+4. Optionally click **"Delete branch"** to clean up the feature branch.
+
+### Step 5 — Verify Deployment
+
+1. Go to the **Actions** tab: `https://github.com/abrar0205/energymarket/actions`
+2. The **"Deploy to GitHub Pages"** workflow triggers automatically on merge to `main`.
+3. Wait for the workflow to complete (green checkmark ✅).
+4. Visit your live site:
+   ```
+   https://abrar0205.github.io/energymarket/
+   ```
+
+> **Note:** The first deployment may take 1–2 minutes. GitHub Pages is automatically enabled by the workflow — no manual settings change is needed.
+
 ## Deploying to GitHub Pages (Frontend)
 
 The included GitHub Actions workflow automatically builds and deploys the **frontend** to GitHub Pages on every push to `main`. The site works fully standalone — if the Python backend is not reachable, the dashboard uses an in-browser price simulator.
 
-### Steps to enable
+### How deployment works
 
-1. **Push your code** to the `main` branch of your GitHub repository.
-
-2. **Enable GitHub Pages** in your repository settings:
-   - Go to **Settings → Pages**
-   - Under **Build and deployment → Source**, select **GitHub Actions**
-
-3. **Verify the workflow** runs:
-   - Go to the **Actions** tab
-   - The "Deploy to GitHub Pages" workflow should run automatically on push to `main`
-
-4. **Access your site** at:
+1. You **merge a PR** (or push) to the `main` branch.
+2. The GitHub Actions workflow (`.github/workflows/deploy.yml`) runs automatically.
+3. It installs dependencies, builds the frontend, and deploys to GitHub Pages.
+4. GitHub Pages is **auto-enabled** by the workflow (`enablement: true` in the configure-pages step) — no manual settings change required.
+5. Your site goes live at:
    ```
-   https://YOUR_GITHUB_USERNAME.github.io/energymarket/
+   https://abrar0205.github.io/energymarket/
    ```
 
-### How it works
+### Technical details
 
 - **Vite base path** is set to `/energymarket/` in `vite.config.ts` to match the repository name.
 - The **GitHub Actions workflow** (`.github/workflows/deploy.yml`) installs dependencies, builds the frontend, and deploys it using `actions/deploy-pages@v4`.
