@@ -63,7 +63,13 @@ body {
   gap: 0.75rem;
 }
 
-.rwe-logo {
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-logo {
   height: 38px;
   width: auto;
   display: block;
