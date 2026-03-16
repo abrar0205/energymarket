@@ -79,7 +79,7 @@ body {
 .app-header h1 {
   font-size: 1.55rem;
   font-weight: 700;
-  color: var(--primary);
+  color: #1f4c8f;
   letter-spacing: -0.02em;
 }
 
