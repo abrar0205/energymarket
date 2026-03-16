@@ -17,6 +17,10 @@
   --chart-axis: #8C98A9;
   --chart-tooltip-bg: #FFFFFF;
   --chart-tooltip-border: #E3E8EF;
+  --bg-gradient-start: #1f4c8f;
+  --bg-gradient-mid-1: #1f5a96;
+  --bg-gradient-mid-2: #167e9b;
+  --bg-gradient-end: #0aa7a7;
 }
 
 * {
@@ -27,8 +31,14 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #1f4c8f;
-  background-image: linear-gradient(90deg, #1f4c8f 0%, #1f5a96 25%, #167e9b 60%, #0aa7a7 100%);
+  background-color: var(--bg-gradient-start);
+  background-image: linear-gradient(
+    90deg,
+    var(--bg-gradient-start) 0%,
+    var(--bg-gradient-mid-1) 25%,
+    var(--bg-gradient-mid-2) 60%,
+    var(--bg-gradient-end) 100%
+  );
   color: var(--text);
   font-size: 15px;
   line-height: 1.6;
