@@ -27,7 +27,8 @@
 
 body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: var(--bg);
+  background-color: #1f4c8f;
+  background-image: linear-gradient(90deg, #1f4c8f 0%, #1f5a96 25%, #167e9b 60%, #0aa7a7 100%);
   color: var(--text);
   font-size: 15px;
   line-height: 1.6;
