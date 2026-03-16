@@ -38,7 +38,14 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1>RWE Supply &amp; Trading - Trader Dashboard</h1>
+          <div className="brand-row">
+            <img
+              src="/rwe-logo.png"
+              alt="RWE logo"
+              className="rwe-logo"
+            />
+            <h1>RWE Supply &amp; Trading - Trader Dashboard</h1>
+          </div>
           <p className="subtitle">
             Power Germany Base Year 2021 — Simulated Live Market View
           </p>

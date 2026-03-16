@@ -57,6 +57,18 @@ body {
   flex-direction: column;
 }
 
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rwe-logo {
+  height: 38px;
+  width: auto;
+  display: block;
+}
+
 .app-header h1 {
   font-size: 1.55rem;
   font-weight: 700;
